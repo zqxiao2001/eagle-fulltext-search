@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>全文检索</title>
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+
+<!-- ===== 标题栏（无边框窗口，自行实现拖拽区） ===== -->
+<header class="titlebar" id="titlebar">
+  <div class="tb-left">
+    <span class="tb-title">全文检索</span>
+    <span class="tb-sub" id="tbSub">准备中…</span>
+  </div>
+  <div class="tb-right no-drag">
+    <button class="tb-btn" id="btnSettings" title="索引设置">设置</button>
+    <button class="tb-btn" id="btnRebuild" title="重新扫描并重建索引">重建索引</button>
+    <button class="tb-btn icon" id="btnMin" title="最小化">–</button>
+    <button class="tb-btn icon" id="btnClose" title="关闭（⌘W）">✕</button>
+  </div>
+</header>
+
+<!-- ===== 搜索区 ===== -->
+<section class="searchbar">
+  <div class="searchbox">
+    <svg class="ico" viewBox="0 0 20 20" aria-hidden="true">
+      <circle cx="8.5" cy="8.5" r="5.5" fill="none" stroke="currentColor" stroke-width="1.6"></circle>
+      <line x1="12.8" y1="12.8" x2="17" y2="17" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></line>
+    </svg>
+    <input id="q" type="text" autocomplete="off" spellcheck="false"
+           placeholder="搜索标题、注释、标签、文件夹与文件正文…">
+    <button class="clear" id="btnClear" title="清空（Esc）">✕</button>
+  </div>
+  <div class="searchmeta">
+    <div class="hint" id="hint">支持 <code>"精确短语"</code>、<code>-排除词</code>、<code>ext:pdf</code>、<code>type:word</code>、<code>tag:教材</code>、<code>folder:示例文件夹</code>、<code>star:&gt;=4</code></div>
+    <div class="sortwrap">
+      <label for="sort">排序</label>
+      <select id="sort">
+        <option value="relevance">相关度</option>
+        <option value="mtime">最近修改</option>
+        <option value="name">名称</option>
+      </select>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 主体：左筛选 + 右结果 ===== -->
+<main class="main">
+  <aside class="rail" id="rail">
+    <div class="rail-group" id="grpType">
+      <div class="rail-title">类型</div>
+      <div class="rail-body" id="typeList"></div>
+    </div>
+    <div class="rail-group" id="grpTag">
+      <div class="rail-title">标签</div>
+      <div class="rail-body" id="tagList"></div>
+    </div>
+    <div class="rail-group" id="grpFolder">
+      <div class="rail-title">文件夹</div>
+      <div class="rail-body" id="folderList"></div>
+    </div>
+    <div class="rail-group" id="grpStar">
+      <div class="rail-title">评分</div>
+      <div class="rail-body" id="starList"></div>
+    </div>
+  </aside>
+
+  <section class="results" id="resultsWrap">
+    <!-- 索引进度面板 -->
+    <div class="panel" id="progressPanel" hidden>
+      <h2 id="pgTitle">正在建立索引</h2>
+      <div class="bar"><div class="bar-fill" id="pgFill"></div></div>
+      <div class="pg-line" id="pgLine">扫描资源库…</div>
+      <div class="pg-line muted" id="pgCurrent"></div>
+      <div class="pg-actions"><button class="btn" id="btnCancel">取消</button></div>
+    </div>
+
+    <!-- 空状态 / 首屏概览 -->
+    <div class="empty" id="emptyState">
+      <div class="empty-title">尚未建立索引</div>
+      <div class="empty-desc">建立索引后即可在 <b id="emptyCount">全部</b> 条目的标题、注释、标签、文件夹与文件正文中检索。<br>
+        正文抽取覆盖 PDF、Word、Excel、PPT、ePub、RTF、Markdown、纯文本与主流代码文件。</div>
+      <div class="empty-actions">
+        <button class="btn primary" id="btnBuild">建立索引</button>
+      </div>
+      <div class="empty-keys">
+        <span><kbd>⌘K</kbd> 聚焦搜索</span><span><kbd>↑</kbd><kbd>↓</kbd> 选择</span>
+        <span><kbd>↵</kbd> 在 Eagle 中定位</span><span><kbd>⌥↵</kbd> 打开文件</span>
+      </div>
+    </div>
+
+    <!-- 索引概览（首次建好索引后展示） -->
+    <div class="overview" id="overview" hidden>
+      <div class="ov-head">
+        <span class="ov-title" id="ovTitle">索引概览</span>
+        <span class="ov-sub" id="ovSub"></span>
+      </div>
+      <div class="ov-grid" id="ovGrid"></div>
+      <details class="ov-warn" id="ovWarn" hidden>
+        <summary id="ovWarnSummary">提取提示</summary>
+        <ul id="ovWarnList"></ul>
+      </details>
+    </div>
+
+    <!-- 结果列表 -->
+    <div class="listhead" id="listHead" hidden></div>
+    <div class="list" id="list"></div>
+    <div class="noresult" id="noResult" hidden></div>
+  </section>
+</main>
+
+<!-- ===== 状态栏 ===== -->
+<footer class="statusbar">
+  <div class="sb-left" id="sbLeft">就绪</div>
+  <div class="sb-right" id="sbRight"></div>
+</footer>
+
+<!-- ===== 设置面板：索引范围（两选一） ===== -->
+<div class="modal" id="settingsModal" hidden>
+  <div class="modal-card">
+    <h3>索引范围</h3>
+    <p class="modal-sub">决定单篇文档最多能索引多少正文。选错只会影响「超长文档能不能被搜到」，不影响已有索引的检索结果。</p>
+    <div class="presets" id="presetList"></div>
+    <p class="modal-note">
+      切换后会自动重建索引（只重新解析正文，标题/注释/标签随时可查）。<br>
+      索引仅写入插件目录 <code>.index/</code>，不会改动 Eagle 资源库任何文件。<br>
+      纯图片扫描版 PDF 没有文字层，任何设置都无法检索其内容。
+    </p>
+    <p class="modal-credit" id="credit">全文检索</p>
+    <div class="modal-actions">
+      <button class="btn" id="btnSettingsCancel">取消</button>
+      <button class="btn primary" id="btnSettingsSave">保存并应用</button>
+    </div>
+  </div>
+</div>
+
+<!-- pdf.js：主线程抽取文本（worker 由 extract.js 通过 require 注入，规避 file:// 限制） -->
+<script src="libs/pdfjs/pdf.js"></script>
+<script src="js/config.js"></script>
+<script src="js/util.js"></script>
+<script src="js/zip.js"></script>
+<script src="js/extract.js"></script>
+<script src="js/tokenizer.js"></script>
+<script src="js/indexer.js"></script>
+<script src="js/search.js"></script>
+<script src="js/eagle-api.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

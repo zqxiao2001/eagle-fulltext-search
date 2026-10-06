@@ -1,0 +1,23 @@
+{
+    "id": "fulltext-search",
+    "version": "1.1.1",
+    "name": "全文检索",
+    "logo": "./logo.png",
+    "keywords": ["全文检索", "检索", "搜索", "正文", "search", "fulltext", "PDF", "Word", "注释", "标签"],
+    "platform": "all",
+    "arch": "all",
+    "devTools": false,
+    "main": {
+        "runAfterInstall": false,
+        "url": "index.html",
+        "width": 1120,
+        "height": 760,
+        "minWidth": 760,
+        "minHeight": 520,
+        "resizable": true,
+        "frame": false,
+        "transparent": false,
+        "vibrancy": false,
+        "alwaysOnTop": false
+    }
+}
