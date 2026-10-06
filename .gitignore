@@ -1,0 +1,27 @@
+# ---- 运行时生成物：不要提交 ----
+# .index/ 与 settings.json 记录本机资源库路径与索引范围设置，
+# 都是运行时状态，克隆后会自动重建。
+.index/
+settings.json
+
+# ---- 构建与测试产物 ----
+dist/
+tools/testlib/
+tools/test-index/
+tools/node_modules/
+node_modules/
+package-lock.json
+
+# ---- 本机截图产物 ----
+preview/
+
+# ---- selfcheck 的可选词表 ----
+tools/.private-terms
+
+# ---- 编辑器 / 系统 ----
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
+*.log

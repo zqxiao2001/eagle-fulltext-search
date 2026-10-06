@@ -1,0 +1,44 @@
+{
+  "name": "eagle-fulltext-search",
+  "version": "1.1.1",
+  "description": "为 Eagle 素材库提供正文级全文检索：把 PDF / Office / ePub / 文本 / 代码的正文与标题、注释、标签、文件夹统一召回，并高亮命中片段。零外部依赖。",
+  "keywords": [
+    "eagle",
+    "eagle-plugin",
+    "full-text-search",
+    "search",
+    "pdf",
+    "docx",
+    "全文检索"
+  ],
+  "author": "肖至勍",
+  "license": "MIT",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zqxiao2001/eagle-fulltext-search.git"
+  },
+  "homepage": "https://github.com/zqxiao2001/eagle-fulltext-search#readme",
+  "bugs": {
+    "url": "https://github.com/zqxiao2001/eagle-fulltext-search/issues"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "fixtures": "python3 tools/make-fixtures.py && python3 tools/make-cjk-pdf.py",
+    "selfcheck": "node tools/selfcheck.js",
+    "test:formats": "node tools/test-formats.js",
+    "test:core": "node tools/test-core.js",
+    "test:ui": "node tools/test-ui.js",
+    "test:acceptance": "node tools/test-acceptance.js",
+    "test": "node tools/selfcheck.js && node tools/test-formats.js && node tools/test-core.js && node tools/test-ui.js && node tools/test-acceptance.js",
+    "preview": "node tools/preview.js",
+    "build:index": "node tools/build-index.js",
+    "build:release": "node tools/build-release.js"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0",
+    "playwright": "^1.44.0"
+  }
+}
